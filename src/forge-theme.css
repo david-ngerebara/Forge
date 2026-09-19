@@ -1,0 +1,265 @@
+/* src/forge-theme.css
+   "Obsidian Horizon" theme for the whole app.
+
+   HOW IT WORKS
+   Your pages use shadcn-style tokens (bg-card, text-primary, border-border ...), so
+   redefining the variables below re-colors every page at once, including pages that
+   don't have any theme-specific code. The rules further down add the glass panels,
+   glowing pill buttons and dark input wells from the design system.
+
+   INSTALL
+   Import this AFTER your index.css, e.g. in src/main.jsx:
+       import './index.css';
+       import './forge-theme.css';
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ---------- Tokens (HSL triplets, same format as your existing variables) ---------- */
+:root,
+.dark {
+  --background: 222 28% 5%;            /* #090B10  obsidian void            */
+  --foreground: 210 40% 98%;           /* #F8FAFC  optical white            */
+
+  --card: 219 37% 11%;                 /* #121927  midnight glass substrate */
+  --card-foreground: 210 40% 98%;
+  --popover: 219 37% 11%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 217 91% 60%;              /* #3B82F6  electric cerulean        */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 219 30% 15%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 219 30% 13%;
+  --muted-foreground: 215 20% 65%;     /* #94A3B8  celestial slate          */
+
+  --accent: 217 55% 17%;               /* azure-tinted well                 */
+  --accent-foreground: 213 100% 90%;
+
+  --destructive: 0 84% 62%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 217 20% 19%;               /* hairline, ~white at 8%            */
+  --input: 217 25% 16%;
+  --ring: 217 91% 60%;
+
+  --chart-1: 217 91% 60%;
+  --chart-2: 199 89% 60%;
+  --chart-3: 224 76% 48%;
+  --chart-4: 213 94% 78%;
+  --chart-5: 250 80% 70%;
+
+  /* index.css defines these for the old light theme (--ink is near-black there).
+     Without an override, anything using them would be dark-on-dark. */
+  --ink: 210 40% 98%;
+  --ember: 217 91% 60%;
+
+  --radius: 1rem;
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+html {
+  background: #090b10;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv05' 1;
+  -webkit-font-smoothing: antialiased;
+  color: hsl(var(--foreground));
+}
+
+.font-heading,
+h1, h2, h3 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Numbers should not jitter when they update */
+.tabular-nums,
+h1, h2, h3, .forge-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'cv05' 1;
+}
+
+::selection { background: rgba(59, 130, 246, 0.35); }
+
+/* ---------- Glass surfaces ---------- */
+/* Tier 1: every "card" in the app becomes frosted midnight glass */
+.bg-card {
+  background-color: rgba(18, 25, 39, 0.7);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* used by the bottom nav */
+.glass {
+  background-color: rgba(13, 17, 23, 0.78);
+  -webkit-backdrop-filter: blur(36px);
+  backdrop-filter: blur(36px);
+}
+
+/* Tier 2: hero panel with a back-projected blue aura */
+.forge-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 0% 100%, rgba(37, 99, 235, 0.30) 0%, rgba(9, 11, 16, 0) 62%),
+    rgba(18, 25, 39, 0.8);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  -webkit-backdrop-filter: blur(36px);
+  backdrop-filter: blur(36px);
+}
+.forge-hero::before {           /* iridescent rim */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, rgba(96, 165, 250, 0.38), rgba(255, 255, 255, 0.08) 45%, rgba(37, 99, 235, 0.05));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---------- Small helpers used by the pages ---------- */
+.forge-eyebrow {                 /* micro label: uppercase + loose tracking */
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forge-chip {                    /* status / category pill */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(213 94% 78%);
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.forge-well {                    /* inset data well inside a card */
+  background: rgba(9, 11, 16, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+}
+
+.forge-glow { box-shadow: 0 0 25px rgba(59, 130, 246, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5); }
+
+.forge-aura {                    /* soft blurred blue light behind content */
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(9, 11, 16, 0) 70%);
+}
+
+/* ---------- Buttons ---------- */
+/* Primary: glowing gradient pill. Matches shadcn <Button> and any bg-primary button. */
+button[class~="bg-primary"],
+a[class~="bg-primary"] {
+  background-image: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: box-shadow 0.2s ease, transform 0.15s ease, filter 0.2s ease;
+}
+button[class~="bg-primary"]:hover:not(:disabled) { filter: brightness(1.08); }
+button[class~="bg-primary"]:active:not(:disabled) { transform: scale(0.985); }
+
+/* Secondary: glass capsule */
+button[class~="bg-secondary"] {
+  background: rgba(18, 25, 39, 0.6);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 9999px;
+  color: hsl(var(--foreground));
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  transition: border-color 0.2s ease;
+}
+button[class~="bg-secondary"]:hover:not(:disabled) { border-color: rgba(96, 165, 250, 0.5); }
+
+button:disabled,
+button[disabled] { box-shadow: none !important; }
+
+/* ---------- Inputs ---------- */
+input:not([type='checkbox']):not([type='radio']):not([type='range']),
+textarea,
+select {
+  background-color: #090b10;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: hsl(var(--foreground));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input:not([type='checkbox']):not([type='radio']):not([type='range']):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+}
+input::placeholder,
+textarea::placeholder { color: #475569; }
+
+/* ---------- Motion: respect the user's setting ---------- */
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ---------- Segmented tabs (glowing thumb) ---------- */
+.forge-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  background: rgba(13, 17, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.forge-tab-active {
+  background-image: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Extra helpers ---------- */
+.forge-chip-success {
+  color: #6ee7b7;
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+.forge-orb {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.forge-done {                    /* completed set row */
+  background: rgba(52, 211, 153, 0.08);
+}
+.forge-warn {                    /* pain / caution box */
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+}
+.forge-overlay {
+  z-index: 2147483000;             /* above the z-50 bottom nav in Layout.jsx */
+  background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+/* Destructive confirm buttons keep their red fill (they also carry bg-primary from <Button>) */
+button[class~="bg-red-600"] {
+  background-image: none;
+  background-color: #dc2626;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+  border-radius: 9999px;
+}
+button[class~="bg-red-600"]:hover:not(:disabled) { background-color: #b91c1c; }

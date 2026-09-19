@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 25% 98%;
+    --foreground: 20 14% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 11%;
+    --primary: 16 90% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 20% 95%;
+    --secondary-foreground: 20 14% 11%;
+    --muted: 30 18% 95%;
+    --muted-foreground: 20 8% 45%;
+    --accent: 16 90% 96%;
+    --accent-foreground: 16 90% 30%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
+    --ring: 16 90% 53%;
+    --chart-1: 16 90% 53%;
+    --chart-2: 160 60% 40%;
+    --chart-3: 200 70% 50%;
+    --chart-4: 43 80% 56%;
+    --chart-5: 280 60% 55%;
+    --radius: 0.9rem;
+    --font-heading: 'Sora', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --ink: 20 16% 9%;
+    --ember: 16 90% 53%;
+  }
+
+  .dark {
+    --background: 20 16% 7%;
+    --foreground: 30 20% 96%;
+    --card: 20 16% 10%;
+    --card-foreground: 30 20% 96%;
+    --popover: 20 16% 10%;
+    --popover-foreground: 30 20% 96%;
+    --primary: 16 90% 57%;
+    --primary-foreground: 20 16% 7%;
+    --secondary: 20 12% 16%;
+    --secondary-foreground: 30 20% 96%;
+    --muted: 20 12% 16%;
+    --muted-foreground: 30 10% 65%;
+    --accent: 16 50% 16%;
+    --accent-foreground: 16 90% 70%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 12% 18%;
+    --input: 20 12% 18%;
+    --ring: 16 90% 57%;
+    --ink: 30 20% 96%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1, h2, h3, h4 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .glass {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}

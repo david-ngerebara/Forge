@@ -4,6 +4,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildUserContext, todayStr } from "../_shared/fitness.ts";
 import { invokeLLMStructured, corsHeaders } from "../_shared/openai.ts";
+import { buildVarietyPrompt, getRecentMeals, repeatedMeals, shuffle } from "./variety.ts";
+import { buildIdeasPrompt } from "./meal-ideas.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -30,8 +32,20 @@ Deno.serve(async (req) => {
     const ctx = await buildUserContext(db, user);
     const profile = ctx.profile;
 
+    // Variety: meals to avoid (sent by the app, else read from this user's recent plans)
+    const sentAvoid: string[] = Array.isArray(body.avoid_meals)
+      ? body.avoid_meals.filter((m: unknown) => typeof m === "string").map((m: string) => m.slice(0, 80)).slice(0, 60)
+      : [];
+    const recent = sentAvoid.length ? sentAvoid : await getRecentMeals(db, user.id);
+
     const { data: recipes } = await db.from("recipes").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30);
     const { data: pantry } = await db.from("pantry_items").select("*").eq("user_id", user.id).eq("have", true);
+
+    // buildUserContext only returns the 5 newest recipes, so pick 5 at random from the 30 fetched above
+    // so the same few saved recipes don't dominate every plan.
+    const recipePool = shuffle(recipes || []).slice(0, 5).map((r: any) => ({
+      title: r.title, calories: r.nutrition?.calories, protein: r.nutrition?.protein, tags: r.dietary_tags,
+    }));
 
     const prompt = `You are Forge's nutrition planner. Create a one-day meal plan as structured JSON for ${targetDate}.
 
@@ -44,7 +58,7 @@ User nutrition context:
 - Disliked foods: ${JSON.stringify(profile.disliked_foods)}
 - Cooking preference: ${profile.cooking_preference}
 
-Saved recipes (prefer these when they fit): ${JSON.stringify(ctx.savedRecipes)}
+Saved recipes (optional inspiration; use at most one, and only if it isn't in the recently planned list): ${JSON.stringify(recipePool)}
 Pantry items available (prioritize using): ${JSON.stringify((pantry || []).map(p => p.name))}
 
 Today's training: ${JSON.stringify(ctx.recentWorkouts[0])}
@@ -61,9 +75,13 @@ Return JSON:
   "total_protein": number,
   "grocery_items": [{"name":"string","category":"string","quantity":"string"}],
   "coach_note": "one sentence connecting today's training and nutrition"
-}`;
+}
 
-    const res = await invokeLLMStructured(prompt, {
+${buildVarietyPrompt(body, recent)}
+
+${buildIdeasPrompt(recent)}`;
+
+    const schema = {
       type: "object",
       properties: {
         meals: {
@@ -84,7 +102,20 @@ Return JSON:
         },
         coach_note: { type: "string" }
       }
-    });
+    };
+
+    let res = await invokeLLMStructured(prompt, schema);
+    if (!Array.isArray(res?.meals) || res.meals.length === 0) throw new Error("Meal planner returned no meals");
+
+    // If the model still repeated a recent meal, ask once for replacements
+    const dupes = repeatedMeals(res.meals, recent);
+    if (dupes.length) {
+      const retry = await invokeLLMStructured(
+        `${prompt}\n\nYour previous attempt repeated these recent meals: ${dupes.join("; ")}. Return the full plan again with those meals replaced by clearly different dishes.`,
+        schema,
+      );
+      if (Array.isArray(retry?.meals) && retry.meals.length) res = retry;
+    }
 
     // Save meal plan (upsert by date)
     const { data: existing } = await db.from("meal_plans").select("id").eq("user_id", user.id).eq("date", targetDate).limit(1);

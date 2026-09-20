@@ -188,12 +188,55 @@ function AddFoodModal({ onClose, onSaved }) {
   );
 }
 
+// ---- Meal plan variety ----
+const CUISINES = ['Mediterranean', 'Mexican', 'Thai', 'Japanese', 'Indian', 'Korean', 'Middle Eastern', 'Greek', 'Vietnamese', 'Italian', 'Moroccan', 'Caribbean', 'Ethiopian', 'Peruvian', 'Lebanese', 'Spanish', 'Chinese (home-style)', 'Southern US (lightened)'];
+const PROTEINS = ['chicken', 'turkey', 'salmon', 'white fish (cod or tilapia)', 'shrimp', 'tuna', 'eggs', 'tofu', 'tempeh', 'lentils', 'chickpeas', 'black beans', 'lean beef', 'pork tenderloin', 'Greek yogurt or cottage cheese', 'edamame'];
+const BREAKFAST_STYLES = ['egg-based', 'oats or overnight oats', 'yogurt bowl', 'smoothie bowl', 'savory breakfast bowl', 'protein pancakes or waffles', 'breakfast wrap or burrito', 'chia pudding', 'toast with a protein topping'];
+const SNACK_STYLES = ['fruit and protein', 'veggies with a dip', 'nuts and seeds', 'yogurt-based', 'roasted chickpeas or edamame', 'cheese and whole-grain crackers', 'homemade energy bites', 'protein shake'];
+
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+};
+
+// Random constraints per meal slot. Lunch and dinner always get different cuisines and proteins.
+function buildVariety() {
+  const cuisines = shuffle(CUISINES);
+  const proteins = shuffle(PROTEINS);
+  return {
+    seed: Math.random().toString(36).slice(2, 10),
+    slots: {
+      breakfast: { style: shuffle(BREAKFAST_STYLES)[0] },
+      lunch: { cuisine: cuisines[0], protein: proteins[0] },
+      dinner: { cuisine: cuisines[1], protein: proteins[1] },
+      snack: { style: shuffle(SNACK_STYLES)[0] },
+    },
+  };
+}
+
+// Titles of meals from the last 10 days of plans (including today's current plan) so the planner can skip them.
+async function loadRecentMeals() {
+  try {
+    const since = new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10);
+    const { data } = await supabase.from('meal_plans').select('meals').gte('date', since).order('created_at', { ascending: false }).limit(30);
+    const seen = new Set();
+    (data || []).forEach(p => (p.meals || []).forEach(m => {
+      const t = (m.recipe_title || m.description || '').trim().slice(0, 80);
+      if (t) seen.add(t);
+    }));
+    return [...seen].slice(0, 60);
+  } catch { return []; }
+}
+
 function MealPlan({ mealPlan, profile, onRefresh }) {
   const [generating, setGenerating] = useState(false);
   const generate = async () => {
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('generate-meal-plan', { body: { date: todayStr() } });
+      // Send the last ~10 days of meals plus fresh random cuisine/protein picks so every click starts from different inputs.
+      const avoid_meals = await loadRecentMeals();
+      const { data, error } = await supabase.functions.invoke('generate-meal-plan', { body: { date: todayStr(), avoid_meals, variety: buildVariety() } });
       if (error) throw error;
       if (data?.error) alert(data.error);
       await onRefresh();

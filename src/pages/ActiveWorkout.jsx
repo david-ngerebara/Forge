@@ -4,7 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
-import { Check, Plus, X, Timer, SkipForward, RefreshCw, ArrowLeft, Trophy, Flame, Dumbbell, AlertTriangle, Play, Search, Shuffle, HeartPulse } from 'lucide-react';
+import { Check, Plus, X, Timer, SkipForward, RefreshCw, ArrowLeft, Trophy, Flame, Dumbbell, AlertTriangle, Play, Search, Shuffle, HeartPulse, Info } from 'lucide-react';
+import ExerciseHowTo from '@/components/ExerciseHowTo';
 import { cn } from '@/lib/utils';
 import { estimateWorkout, toKg } from '@/lib/calorieEstimate';
 import { buildWarmup, buildCooldown, parseItemTiming, fmtClock, fmtItemDuration, estimateRoutineMinutes, STATIC_HOLD_NAME, EXTEND_SECONDS } from '@/lib/warmupCooldown';
@@ -77,6 +78,8 @@ export default function ActiveWorkout() {
   const [loading, setLoading] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
   const [showReplace, setShowReplace] = useState(null);
+  const [howTo, setHowTo] = useState(null); // exercise whose "How to" sheet is open
+  const openRoutineHowTo = (item) => setHowTo({ exercise_name: item.name, note: item.detail, kind: 'routine' }); // warm-up / cool-down rows
   // phase = { type: 'rest' | 'ready' | 'hold', exIdx, setIdx, from?, total, startAt, endAt } or null
   const [phase, setPhase] = useState(null);
   const [now, setNow] = useState(Date.now());
@@ -462,7 +465,7 @@ export default function ActiveWorkout() {
       )}
 
       {/* Pre-workout */}
-      <RoutineSection icon={Flame} title="Pre-workout" items={warmup} onToggle={(i) => toggleItem('warmup', i)} onStart={(i) => startItemTimer('warmup', i)} />
+      <RoutineSection icon={Flame} title="Pre-workout" items={warmup} onToggle={(i) => toggleItem('warmup', i)} onStart={(i) => startItemTimer('warmup', i)} onInfo={openRoutineHowTo} />
 
       {workout.exercises.map((ex, exIdx) => {
         if (ex.skipped) {
@@ -483,6 +486,7 @@ export default function ActiveWorkout() {
                 <div>
                   <h3 className="font-bold">{ex.exercise_name}</h3>
                   <p className="text-xs text-muted-foreground capitalize">{ex.muscle_group} · {ex.target_sets}×{ex.target_reps_min}-{ex.target_reps_max}{timed ? ' sec' : ''} · RIR {ex.rir_target}</p>
+                  <button onClick={() => setHowTo(ex)} className="text-[11px] text-primary font-semibold mt-1 flex items-center gap-1"><Info className="w-3 h-3" /> How to do this</button>
                 </div>
                 <div className="flex gap-1">
                   <button onClick={() => setShowReplace(exIdx)} className="w-8 h-8 rounded-full border border-border flex items-center justify-center" title="Replace"><RefreshCw className="w-3.5 h-3.5" /></button>
@@ -529,17 +533,18 @@ export default function ActiveWorkout() {
       })}
 
       {/* Post-workout */}
-      <RoutineSection icon={HeartPulse} title="Post-workout" items={cooldown} onToggle={(i) => toggleItem('cooldown', i)} onStart={(i) => startItemTimer('cooldown', i)} />
+      <RoutineSection icon={HeartPulse} title="Post-workout" items={cooldown} onToggle={(i) => toggleItem('cooldown', i)} onStart={(i) => startItemTimer('cooldown', i)} onInfo={openRoutineHowTo} />
 
       {showReplace !== null && (
         <ReplaceModal exercise={workout.exercises[showReplace]} workoutExercises={workout.exercises} profile={profile} onClose={() => setShowReplace(null)} onReplace={(row) => replaceExercise(showReplace, row)} />
       )}
+      {howTo && <ExerciseHowTo exercise={howTo} onClose={() => setHowTo(null)} />}
     </div>
   );
 }
 
 // A pre- or post-workout checklist. Items that state a time get a timer button.
-function RoutineSection({ icon: Icon, title, items, onToggle, onStart }) {
+function RoutineSection({ icon: Icon, title, items, onToggle, onStart, onInfo }) {
   if (!items?.length) return null;
   const doneCount = items.filter(it => it.done).length;
   return (
@@ -549,24 +554,29 @@ function RoutineSection({ icon: Icon, title, items, onToggle, onStart }) {
         <p className="text-xs text-muted-foreground tabular-nums">{doneCount}/{items.length} · ~{estimateRoutineMinutes(items)} min</p>
       </div>
       {items.map((item, i) => (
-        <CheckItem key={i} item={item} timing={parseItemTiming(item)} onToggle={() => onToggle(i)} onStart={() => onStart(i)} />
+        <CheckItem key={i} item={item} timing={parseItemTiming(item)} onToggle={() => onToggle(i)} onStart={() => onStart(i)} onInfo={() => onInfo(item)} />
       ))}
     </div>
   );
 }
 
-function CheckItem({ item, onToggle, timing, onStart }) {
+function CheckItem({ item, onToggle, timing, onStart, onInfo }) {
   return (
     <div className="flex items-center gap-2">
-      <button onClick={onToggle} className="flex-1 min-w-0 flex items-center gap-3 py-2 text-left">
-        <span className={cn('w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition', item.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-border')}>
-          {item.done && <Check className="w-3.5 h-3.5" />}
-        </span>
-        <span className="flex-1 min-w-0">
-          <span className={cn('block text-sm font-medium', item.done && 'line-through text-muted-foreground')}>{item.name}</span>
-          {item.detail && <span className="block text-xs text-muted-foreground">{item.detail}</span>}
-        </span>
-      </button>
+      <div className="flex-1 min-w-0 flex items-center gap-3 py-2">
+        <button onClick={onToggle} className="flex-shrink-0" aria-label={item.done ? 'Mark not done' : 'Mark done'}>
+          <span className={cn('w-6 h-6 rounded-md border-2 flex items-center justify-center transition', item.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-border')}>
+            {item.done && <Check className="w-3.5 h-3.5" />}
+          </span>
+        </button>
+        <div className="flex-1 min-w-0">
+          <button onClick={onToggle} className="block w-full text-left">
+            <span className={cn('block text-sm font-medium', item.done && 'line-through text-muted-foreground')}>{item.name}</span>
+            {item.detail && <span className="block text-xs text-muted-foreground">{item.detail}</span>}
+          </button>
+          <button onClick={onInfo} className="text-[11px] text-primary font-semibold mt-0.5 flex items-center gap-1"><Info className="w-3 h-3" /> How to do this</button>
+        </div>
+      </div>
       {timing && !item.done && (
         <button onClick={onStart} className="flex-shrink-0 h-9 pl-2.5 pr-3 rounded-full border-2 border-primary text-primary flex items-center gap-1 text-xs font-bold" title="Start timer">
           <Play className="w-3.5 h-3.5" />{fmtItemDuration(timing)}

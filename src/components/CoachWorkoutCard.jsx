@@ -13,7 +13,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
-import { Check, Plus, Timer, X, SkipForward, Trophy, Flame, Dumbbell, HeartPulse, Play } from 'lucide-react';
+import { Check, Plus, Timer, X, SkipForward, Trophy, Flame, Dumbbell, HeartPulse, Play, Info } from 'lucide-react';
+import ExerciseHowTo from '@/components/ExerciseHowTo';
 import { cn } from '@/lib/utils';
 
 const READY_SECONDS = 5;
@@ -106,6 +107,8 @@ export default function CoachWorkoutCard({ workout, unit = 'lb', onChange }) {
   const [now, setNow] = useState(Date.now());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [howTo, setHowTo] = useState(null); // exercise whose "How to" sheet is open
+  const openRoutineHowTo = (item) => setHowTo({ exercise_name: item.name, note: item.detail, kind: 'routine' }); // warm-up / cool-down rows
   const audioRef = useRef(null);
   const lastBeepRef = useRef(null);
 
@@ -404,7 +407,7 @@ export default function CoachWorkoutCard({ workout, unit = 'lb', onChange }) {
           <SectionLabel icon={Flame} text="Pre-workout" />
           {workout.pre_tip && <p className="text-sm mb-2">{workout.pre_tip}</p>}
           {(workout.warmup || []).map((item, i) => (
-            <CheckItem key={i} item={item} disabled={saved} onToggle={() => toggleItem('warmup', i)} timing={parseItemTiming(item)} onStart={() => startItemTimer('warmup', i)} />
+            <CheckItem key={i} item={item} disabled={saved} onToggle={() => toggleItem('warmup', i)} timing={parseItemTiming(item)} onStart={() => startItemTimer('warmup', i)} onInfo={() => openRoutineHowTo(item)} />
           ))}
         </div>
       )}
@@ -430,6 +433,7 @@ export default function CoachWorkoutCard({ workout, unit = 'lb', onChange }) {
                 <div className="min-w-0">
                   <h4 className="font-bold">{ex.exercise_name}</h4>
                   <p className="text-xs text-muted-foreground capitalize">{ex.muscle_group} · {ex.target_sets}×{ex.target_reps_min}-{ex.target_reps_max}{timed ? ' sec' : ''} · RIR {ex.rir_target}</p>
+                  <button onClick={() => setHowTo(ex)} className="text-[11px] text-primary font-semibold mt-1 flex items-center gap-1"><Info className="w-3 h-3" /> How to do this</button>
                 </div>
                 {!saved && (
                   <button onClick={() => toggleSkip(exIdx)} className="w-8 h-8 rounded-full border border-border flex items-center justify-center flex-shrink-0" title="Skip"><SkipForward className="w-3.5 h-3.5" /></button>
@@ -480,7 +484,7 @@ export default function CoachWorkoutCard({ workout, unit = 'lb', onChange }) {
         <div className="rounded-3xl bg-card border border-border p-4">
           <SectionLabel icon={HeartPulse} text="Post-workout" />
           {(workout.cooldown || []).map((item, i) => (
-            <CheckItem key={i} item={item} disabled={saved} onToggle={() => toggleItem('cooldown', i)} timing={parseItemTiming(item)} onStart={() => startItemTimer('cooldown', i)} />
+            <CheckItem key={i} item={item} disabled={saved} onToggle={() => toggleItem('cooldown', i)} timing={parseItemTiming(item)} onStart={() => startItemTimer('cooldown', i)} onInfo={() => openRoutineHowTo(item)} />
           ))}
           {workout.post_tip && <p className="text-sm mt-2">{workout.post_tip}</p>}
         </div>
@@ -505,6 +509,7 @@ export default function CoachWorkoutCard({ workout, unit = 'lb', onChange }) {
           <Button onClick={finish} disabled={saving} className="w-full rounded-xl h-12 font-semibold">{saving ? 'Saving...' : 'Finish & save workout'}</Button>
         </div>
       )}
+      {howTo && <ExerciseHowTo exercise={howTo} onClose={() => setHowTo(null)} />}
     </div>
   );
 }
@@ -518,18 +523,23 @@ function SectionLabel({ icon: Icon, text }) {
   );
 }
 
-function CheckItem({ item, onToggle, disabled, timing, onStart }) {
+function CheckItem({ item, onToggle, disabled, timing, onStart, onInfo }) {
   return (
     <div className="flex items-center gap-2">
-      <button onClick={onToggle} disabled={disabled} className="flex-1 min-w-0 flex items-center gap-3 py-2 text-left">
-        <span className={cn('w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition', item.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-border')}>
-          {item.done && <Check className="w-3.5 h-3.5" />}
-        </span>
-        <span className="flex-1 min-w-0">
-          <span className={cn('block text-sm font-medium', item.done && 'line-through text-muted-foreground')}>{item.name}</span>
-          {item.detail && <span className="block text-xs text-muted-foreground">{item.detail}</span>}
-        </span>
-      </button>
+      <div className="flex-1 min-w-0 flex items-center gap-3 py-2">
+        <button onClick={onToggle} disabled={disabled} className="flex-shrink-0" aria-label={item.done ? 'Mark not done' : 'Mark done'}>
+          <span className={cn('w-6 h-6 rounded-md border-2 flex items-center justify-center transition', item.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-border')}>
+            {item.done && <Check className="w-3.5 h-3.5" />}
+          </span>
+        </button>
+        <div className="flex-1 min-w-0">
+          <button onClick={onToggle} disabled={disabled} className="block w-full text-left">
+            <span className={cn('block text-sm font-medium', item.done && 'line-through text-muted-foreground')}>{item.name}</span>
+            {item.detail && <span className="block text-xs text-muted-foreground">{item.detail}</span>}
+          </button>
+          <button onClick={onInfo} className="text-[11px] text-primary font-semibold mt-0.5 flex items-center gap-1"><Info className="w-3 h-3" /> How to do this</button>
+        </div>
+      </div>
       {timing && !item.done && !disabled && (
         <button onClick={onStart} className="flex-shrink-0 h-9 pl-2.5 pr-3 rounded-full border-2 border-primary text-primary flex items-center gap-1 text-xs font-bold" title="Start timer">
           <Play className="w-3.5 h-3.5" />{fmtItemDuration(timing)}

@@ -1,428 +1,74 @@
 # Forge
+### Your fitness, nutrition, and recovery in one place.
 
-### AI-powered fitness and nutrition, built around you.
+I created Forge because I wanted a fitness application that brought together the features I actually wanted to use. I was frustrated with platforms that put useful features behind subscriptions or treated workouts, nutrition, and recovery as completely separate things.
 
-Forge is an AI-powered fitness platform that brings workouts, nutrition, recovery, recipes, grocery planning, and personalized coaching into one experience.
+I wanted to build something that could look at the bigger picture instead of treating each part of fitness as its own separate problem.
 
-Instead of treating training and nutrition as separate systems, Forge connects them to help answer one simple question:
+**Try it:** [Forge](https://forge-orcin-delta.vercel.app/)
 
-> **What should I do today to get closer to my goals?**
+## What it does
 
----
+Forge is an AI-powered fitness platform that connects training, nutrition, recovery, and personalized coaching.
 
-## Overview
+Some of its main features include:
 
-Forge combines:
+- **Personalized workouts:** Generates workouts based on goals, experience, schedule, available equipment, and training history.
+- **Workout tracking:** Records sets, reps, weight, effort, and personal records.
+- **Progressive overload:** Tracks performance and adjusts future workout targets based on previous results.
+- **AI fitness coach:** Uses information from a user's fitness journey to provide personalized guidance and recommendations.
+- **Nutrition tracking:** Logs meals and tracks calories and macronutrients.
+- **Meal planning:** Generates meal plans using nutrition goals, food preferences, saved recipes, and available ingredients.
+- **Recipe management:** Imports, organizes, and scales recipes.
+- **Grocery planning:** Turns recipes and meal plans into grocery lists and can account for ingredients already in the pantry.
+- **Recovery tracking:** Records sleep, energy, soreness, stress, and workout readiness.
+- **Progress analytics:** Tracks strength, body weight, training volume, workout frequency, and personal records.
 
-* Personalized workout programming
-* Workout tracking and progressive overload
-* AI fitness coaching
-* Nutrition and food logging
-* AI meal planning
-* Recipe management and scaling
-* Grocery list generation
-* Recovery tracking
-* Progress analytics
-* Personalized recommendations
+The main idea is to help answer one question:
 
-The goal is to create a single platform that understands the user's goals, history, preferences, and progress.
+**What should I do today to get closer to my goals?**
 
----
+## How I built it
 
-## AI Coach
+I built Forge with **React** on the frontend and a **Node.js REST API** on the backend. I used **Supabase and PostgreSQL** to manage application data, including user profiles, workouts, recipes, meal plans, food logs, recovery records, and AI conversations.
 
-Forge includes a persistent AI coach that can understand relevant context from the user's fitness journey.
+I also integrated the **Grok and Gemini APIs** to power the AI coach, workout personalization, meal suggestions, and other natural-language features.
 
-The coach can take into account:
+One thing I wanted to be careful about was not using AI for absolutely everything. Important calculations, such as recipe scaling, macro calculations, and workout progression, are handled by application logic rather than relying on an AI-generated answer. This makes those calculations more predictable.
 
-* Fitness goals
-* Training history
-* Exercise performance
-* Sets, reps, weight, and effort
-* Personal records
-* Recovery
-* Available equipment
-* Nutrition preferences
-* Saved recipes
-* Food logs
-* Grocery inventory
+## Challenges I ran into
 
-Rather than generating a completely random workout every day, Forge combines structured training logic with AI-powered personalization.
+One of my biggest challenges was keeping the AI features available when an API provider wasn't working as expected.
 
-The AI is primarily responsible for coaching, explanations, personalization, meal suggestions, and natural-language interaction.
+My initial Grok integration relied on free usage credits, which eventually ran out. Instead of allowing the AI features to stop working, I integrated Gemini and developed a fallback system that can switch providers when one becomes unavailable. I also added logic to switch between Gemini models when one is experiencing high demand.
 
----
+This was an important lesson for me: connecting an AI API is relatively straightforward, but making an application dependable when external services have limitations is a different challenge.
 
-## Personalized Workouts
+Another challenge was connecting all the different parts of the application. Workouts, nutrition, recovery, recipes, and grocery planning all need to work together. I wanted the AI coach to have relevant context instead of generating completely disconnected recommendations.
 
-Forge generates structured workouts based on the user's:
+## What I'm proud of
 
-* Goals
-* Experience level
-* Schedule
-* Workout duration
-* Available equipment
-* Exercise preferences
-* Training history
-* Recovery
+I'm proud of how much Forge brings together in one application. A workout isn't just a workout when your recovery, nutrition, available equipment, and previous performance can all influence what you should do next.
 
-Each workout can include:
+I'm also proud of the AI fallback system. It pushed me to think beyond getting a feature working and consider what happens when something it depends on stops working.
 
-* Exercises
-* Sets
-* Rep ranges
-* Target weight
-* Rest periods
-* RPE/RIR targets
-* Tempo
-* Form cues
-* Progression strategies
+## What I learned
 
-### Progressive Overload
+Forge helped me improve my understanding of full-stack development, database design, API integrations, and building applications around external AI services.
 
-Forge tracks performance over time and adjusts future workouts accordingly.
+I also learned that AI doesn't need to control every part of an application. Sometimes the best approach is combining AI with predictable application logic, using each where it makes the most sense.
 
-If a user consistently completes the top of a prescribed rep range with appropriate effort, Forge can increase the target.
+## What's next?
 
-If performance remains similar, the target can be maintained.
+There are several features I'd like to continue exploring, including:
 
-If performance decreases significantly, the system can adjust the workload.
+- Computer-vision-based workout form analysis.
+- More advanced progress analytics.
+- Notifications and personalized recommendations.
+- Further improvements to AI coaching and personalization.
 
-Supported progression methods include:
+## Development tools
 
-* Double progression
-* Rep progression
-* Weight progression
-* Volume progression
-* Deloads
-* Exercise substitutions
+I designed and developed Forge myself, using Claude and GitHub Copilot as coding assistants. Claude helped generate portions of code, particularly around AI integrations, while GitHub Copilot helped me debug errors.
 
-Forge also explains why a recommendation changed.
-
----
-
-## Fast Workout Logging
-
-Workout tracking is designed to stay out of the way.
-
-Users can quickly record:
-
-* Weight
-* Reps
-* RPE
-* RIR
-* Completed sets
-
-Users can also:
-
-* Add sets
-* Edit sets
-* Delete sets
-* Skip exercises
-* Replace exercises
-* Start rest timers
-* Automatically save workout history
-
----
-
-## Nutrition
-
-Forge combines fitness tracking with nutrition management.
-
-Users can:
-
-* Log meals
-* Track calories and macros
-* Save recipes
-* Organize recipes
-* Import recipes
-* Scale serving sizes
-* Build meal plans
-* Generate grocery lists
-* Track pantry ingredients
-
-### AI Meal Planning
-
-Forge can create meal plans using factors such as:
-
-* Calories
-* Protein
-* Carbohydrates
-* Fat
-* Dietary preferences
-* Allergies
-* Favorite foods
-* Cooking time
-* Budget
-* Saved recipes
-* Available ingredients
-
-Users can also replace individual meals without rebuilding an entire plan.
-
----
-
-## Recipe Intelligence
-
-Users can import recipe text or supported recipe URLs.
-
-Forge can extract:
-
-* Recipe name
-* Ingredients
-* Quantities
-* Instructions
-* Servings
-* Preparation time
-* Cooking time
-* Nutrition information when reliably available
-
-Recipes can also be scaled automatically when the user changes the serving size.
-
-Nutrition values that are estimated are clearly identified as estimates.
-
----
-
-## Grocery Planning
-
-Forge can automatically turn recipes and meal plans into organized grocery lists.
-
-Grocery items can be grouped by category and users can:
-
-* Check off items
-* Add items
-* Remove items
-* Change quantities
-* Share lists
-
-An optional pantry system can also track ingredients the user already owns, allowing Forge to prioritize meals that use existing food.
-
----
-
-## Recovery
-
-Training doesn't happen in isolation.
-
-Forge can track:
-
-* Sleep duration
-* Sleep quality
-* Energy
-* Muscle soreness
-* Stress
-* Workout readiness
-
-A quick daily check-in allows Forge to use this information when making future training recommendations.
-
-For example, if recovery is low, the system may reduce training volume rather than blindly following the original plan.
-
----
-
-## Progress Tracking
-
-Forge provides analytics for:
-
-* Body weight
-* Strength
-* Training volume
-* Reps
-* Workout frequency
-* Personal records
-
-Users can view trends over time and track estimated 1RM values for exercises such as the bench press, squat, and deadlift.
-
-Estimated values are clearly labeled as estimates.
-
----
-
-## AI + Deterministic Systems
-
-Forge intentionally does not use AI for everything.
-
-Critical calculations are handled by application logic, including:
-
-* Macro calculations
-* Recipe scaling
-* Progression calculations
-* Workout history
-* Database operations
-* Authentication
-* Permissions
-
-AI is used where it provides the most value:
-
-* Coaching
-* Personalization
-* Explanations
-* Meal suggestions
-* Recipe transformations
-* Natural-language interaction
-
-This approach keeps important calculations predictable while still providing the flexibility of an AI coach.
-
----
-
-## Technology
-
-### Frontend
-
-* React
-* Mobile-first responsive interface
-* Accessible component system
-
-### Backend
-
-* Node.js
-* REST API
-* Modular service architecture
-
-### Database
-
-* PostgreSQL
-
-### AI
-
-* AI-powered coaching
-* Context-aware personalization
-* Meal planning
-* Recipe transformation
-
-### Security
-
-* Secure authentication
-* Password hashing
-* Authorization
-* Input validation
-* Rate limiting
-* SQL injection protection
-* XSS protection
-* Secure API communication
-* User-level data isolation
-
----
-
-## Core Data
-
-Forge uses a relational PostgreSQL database with systems for:
-
-* Users and profiles
-* Goals
-* Training preferences
-* Exercise library
-* Workout programs
-* Workouts
-* Sets
-* Personal records
-* Body measurements
-* Recovery logs
-* Recipes
-* Ingredients
-* Meal plans
-* Food logs
-* Grocery lists
-* Pantry inventory
-* AI conversations
-* User preferences
-* Notifications
-
----
-
-## Product Experience
-
-Forge is organized around a simple navigation system:
-
-**Today · Workout · Nutrition · Recipes · Progress · AI Coach · Profile**
-
-The Today screen acts as the central hub, bringing together:
-
-* Today's workout
-* Nutrition
-* Hydration
-* Recovery
-* Progress
-* AI recommendations
-
-The goal is to make the next action obvious without overwhelming the user.
-
----
-
-## Safety
-
-Forge is designed for general fitness and nutrition guidance and is not a replacement for qualified medical professionals.
-
-The system does not:
-
-* Diagnose medical conditions
-* Prescribe medical treatment
-* Encourage exercising through pain
-* Promote crash diets or starvation
-* Present computer-vision feedback as medical diagnosis
-
-Safety-sensitive situations should be handled conservatively and users should be directed toward appropriate professional care when necessary.
-
----
-
-## Roadmap
-
-### Phase 1 — Foundation
-
-Authentication, database, and user profiles.
-
-### Phase 2 — Training
-
-Exercise library, workout creation, logging, and progression.
-
-### Phase 3 — Analytics
-
-Workout history, progress tracking, and personal records.
-
-### Phase 4 — Nutrition
-
-Recipes, food logging, and nutrition tracking.
-
-### Phase 5 — Planning
-
-Meal planning, grocery lists, and pantry management.
-
-### Phase 6 — AI
-
-AI Coach and personalized recommendations.
-
-### Phase 7 — Recovery
-
-Recovery tracking and daily check-ins.
-
-### Phase 8 — Advanced Features
-
-Computer-vision form analysis, notifications, and advanced analytics.
-
-### Phase 9 — Production
-
-Testing, security hardening, performance optimization, and deployment.
-
----
-
-## Vision
-
-Forge is built around a simple idea:
-
-**Your fitness app should understand the whole picture.**
-
-Your training affects your recovery.
-
-Your recovery affects your training.
-
-Your nutrition supports your goals.
-
-Your history influences what you should do next.
-
-Forge brings those pieces together into one intelligent system.
-
----
-
-# Forge
-
-**Train smarter. Recover better. Eat with purpose.**
-
-## Web Link
-https://forge-orcin-delta.vercel.app/
-
+I made the project decisions and directed the development, using these tools to help me work through unfamiliar concepts and technical challenges.

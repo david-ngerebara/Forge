@@ -300,28 +300,6 @@ This approach keeps important calculations predictable while still providing the
 
 ---
 
-## Architecture
-
-```text
-React Frontend
-      |
-      v
-Node.js API
-      |
-      +-- Authentication
-      +-- Workout Services
-      +-- Nutrition Services
-      +-- AI Services
-      +-- Progress Services
-      |
-      v
-PostgreSQL
-```
-
-The architecture is designed to keep business logic separate from API routes and allow new features to be added without rewriting the application.
-
----
-
 ## Core Data
 
 Forge uses a relational PostgreSQL database with systems for:
